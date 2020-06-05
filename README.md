@@ -1,2 +1,2 @@
 # spl_arch
-spl arch
+spl arch 1.0
