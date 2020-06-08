@@ -5,12 +5,14 @@
     Author: Donny.fang
     Date: 2020/6/4 22:21
 """
+from abc import ABC
+
 from spl_arch.command.base_command import BaseCommand
 from spl_arch.function.avg import Avg
 import logging
 
 
-class StatsCommand(BaseCommand):
+class StatsCommand(BaseCommand, ABC):
     def __init__(self, cmd_name, cmd_type, func, field, as_field, group_field):
         super(StatsCommand, self).__init__(cmd_name, cmd_type)
         self.func = func
@@ -47,11 +49,12 @@ class StatsCommand(BaseCommand):
         self.set_output_stream(self.output)
 
     def calculate(self):
-        from spl_arch.stream.StreamException import StreamFinishException
+        from spl_arch.stream.stream_exception import StreamFinishException
         d = dict()
         try:
             while True:
                 docs = self.in_stream.pull()
+
                 for doc in docs:
                     raw = doc["_source"]["_raw"]
 
@@ -61,16 +64,14 @@ class StatsCommand(BaseCommand):
                     d[raw["class"]].append(int(raw["math"]))
 
         except StreamFinishException:
-            pass
+            # get total data
+            for _class, _sum in d.items():
+                self.output.append({"class": _class, self.as_field: Avg("avg", "agg").avg(sum(_sum), len(_sum))})
+
+            self.out_stream.push(self.output)
+            self.out_stream.finish_in = True
         except Exception as e:
             logging.exception(e)
             self._command_exception.set(e.args)
-
-        for _class, _sum in d.items():
-            self.output.append({"class": _class, self.as_field: Avg("avg", "agg").avg(sum(_sum), len(_sum))})
-
-        self.out_stream.push(self.output)
-        self.out_stream.finish_in = True
-
-        if self._exception_lock.locked():
-            self._exception_lock.release()
+        finally:
+            if self._exception_lock.locked(): self._exception_lock.release()

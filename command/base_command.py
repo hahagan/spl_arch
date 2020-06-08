@@ -11,8 +11,8 @@ class BaseCommand(object):
     def __init__(self, cmd_name, cmd_type, exception_lock=None, exception=None):
         self.cmd_name = cmd_name
         self.cmd_type = cmd_type
-        self._command_exception = None
-        self._exception_lock = None
+        self._exception_lock = exception_lock
+        self._command_exception = exception
 
     def set_lock(self, ex_lock):
         self._exception_lock = ex_lock
@@ -55,3 +55,10 @@ class BaseCommand(object):
         :return:
         """
         raise NotImplementedError("{} {} not implemented".format(self.__class__.__name__, "calc"))
+
+    def calculate(self):
+        """
+        cmd calculate
+        :return:
+        """
+        raise NotImplementedError("{} {} not implemented".format(self.__class__.__name__, "calculate"))

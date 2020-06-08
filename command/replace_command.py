@@ -5,11 +5,13 @@
     Author: Donny.fang
     Date: 2020/6/4 15:08
 """
+from abc import ABC
+
 from spl_arch.command.base_command import BaseCommand
 import logging
 
 
-class ReplaceCommand(BaseCommand):
+class ReplaceCommand(BaseCommand, ABC):
     def __init__(self, cmd_name, cmd_type, val, replace_val, field):
         super(ReplaceCommand, self).__init__(cmd_name, cmd_type)
         self.val = val
@@ -38,7 +40,7 @@ class ReplaceCommand(BaseCommand):
         self.set_output_stream(docs)
 
     def calculate(self):
-        from spl_arch.stream.StreamException import StreamFinishException
+        from spl_arch.stream.stream_exception import StreamFinishException
         try:
             while True:
                 docs = self.in_stream.pull()
@@ -50,11 +52,9 @@ class ReplaceCommand(BaseCommand):
 
                 self.out_stream.push(docs)
         except StreamFinishException:
-            pass
+            self.out_stream.finish_in = True
         except Exception as e:
             logging.exception(e)
             self._command_exception.set(e.args)
-
-        self.out_stream.finish_in = True
-        if self._exception_lock.locked():
-            self._exception_lock.release()
+        finally:
+            if self._exception_lock.locked(): self._exception_lock.release()
