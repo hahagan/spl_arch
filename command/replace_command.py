@@ -6,6 +6,7 @@
     Date: 2020/6/4 15:08
 """
 from spl_arch.command.base_command import BaseCommand
+import logging
 
 
 class ReplaceCommand(BaseCommand):
@@ -35,3 +36,25 @@ class ReplaceCommand(BaseCommand):
                 raw[self.field] = self.replace_val
 
         self.set_output_stream(docs)
+
+    def calculate(self):
+        from spl_arch.stream.StreamException import StreamFinishException
+        try:
+            while True:
+                docs = self.in_stream.pull()
+                for doc in docs:
+                    raw = doc["_source"]["_raw"]
+
+                    if raw[self.field] == self.val:
+                        raw[self.field] = self.replace_val
+
+                self.out_stream.push(docs)
+        except StreamFinishException:
+            pass
+        except Exception as e:
+            logging.exception(e)
+            self._command_exception.set(e.args)
+
+        self.out_stream.finish_in = True
+        if self._exception_lock.locked():
+            self._exception_lock.release()

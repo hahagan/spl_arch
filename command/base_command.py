@@ -8,9 +8,17 @@
 
 
 class BaseCommand(object):
-    def __init__(self, cmd_name, cmd_type):
+    def __init__(self, cmd_name, cmd_type, exception_lock=None, exception=None):
         self.cmd_name = cmd_name
         self.cmd_type = cmd_type
+        self._command_exception = None
+        self._exception_lock = None
+
+    def set_lock(self, ex_lock):
+        self._exception_lock = ex_lock
+
+    def set_exception(self, exception):
+        self._command_exception = exception
 
     def set_input_stream(self, in_stream):
         """
