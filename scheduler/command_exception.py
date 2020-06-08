@@ -1,5 +1,5 @@
 class CommandException(Exception):
-    def __init__(self, lock, *args):
+    def __init__(self, lock):
         self._msg = None
         self._lock = lock
 
@@ -13,4 +13,3 @@ class CommandException(Exception):
 
     def __str__(self):
         return self.get()[0]
-
