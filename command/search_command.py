@@ -5,11 +5,14 @@
     Author: Donny.fang
     Date: 2020/6/4 17:42
 """
+from abc import ABC
+
 from spl_arch.command.base_command import BaseCommand
 from spl_arch.extract.comma_separator_extract import CommaSeparatorExtract
 import logging
 
-class SearchCommand(BaseCommand):
+
+class SearchCommand(BaseCommand, ABC):
     def __init__(self, cmd_name, cmd_type, repo):
         super(SearchCommand, self).__init__(cmd_name, cmd_type)
         self.repo = repo
@@ -41,10 +44,11 @@ class SearchCommand(BaseCommand):
         self.set_output_stream(docs)
 
     def calculate(self):
-        from spl_arch.stream.StreamException import StreamFinishException
+        from spl_arch.stream.stream_exception import StreamFinishException
         try:
             while True:
                 docs = self.stream_in()
+
                 if self.extract:
                     for doc in docs:
                         raw = doc["_source"]["_raw"]
@@ -53,12 +57,10 @@ class SearchCommand(BaseCommand):
 
                 self.out_stream.push(docs)
                 self.out_stream.finish_in = True
-                break
         except StreamFinishException:
             pass
         except Exception as e:
             logging.exception(e)
             self._command_exception.set(e.args)
-
-        if self._exception_lock.locked():
-            self._exception_lock.release()
+        finally:
+            if self._exception_lock.locked(): self._exception_lock.release()

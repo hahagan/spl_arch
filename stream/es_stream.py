@@ -16,7 +16,7 @@ class EsStream(BaseStream):
 
     def __init__(self, name, host, port, indexer):
         super(EsStream, self).__init__(name)
-        # self.client = Elasticsearch(host=host, port=port, timeout=300)
+        self.client = Elasticsearch(host=host, port=port, timeout=300)
         self.indexer = indexer
 
     def pull(self):
