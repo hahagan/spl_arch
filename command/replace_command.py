@@ -5,10 +5,9 @@
     Author: Donny.fang
     Date: 2020/6/4 15:08
 """
-from abc import ABC
-
-from spl_arch.command.base_command import BaseCommand
 import logging
+from abc import ABC
+from spl_arch.command.base_command import BaseCommand
 
 
 class ReplaceCommand(BaseCommand, ABC):
@@ -28,22 +27,27 @@ class ReplaceCommand(BaseCommand, ABC):
     def stream_in(self):
         return self.in_stream
 
-    def calc(self):
-        docs = self.in_stream
-
-        for doc in docs:
-            raw = doc["_source"]["_raw"]
-
-            if raw[self.field] == self.val:
-                raw[self.field] = self.replace_val
-
-        self.set_output_stream(docs)
+    # def calc(self):
+    #     from spl_arch.utils.utils import Field_Names
+    #     docs = self.in_stream
+    #     self.field = Field_Names[-1] if len(Field_Names) > 0 else ""
+    #
+    #     for doc in docs:
+    #         raw = doc["_source"]["_raw"]
+    #
+    #         if raw[self.field] == self.val:
+    #             raw[self.field] = self.replace_val
+    #
+    #     self.set_output_stream(docs)
 
     def calculate(self):
         from spl_arch.stream.stream_exception import StreamFinishException
+        from spl_arch.utils.utils import Field_Names
+        self.field = Field_Names[-1] if len(Field_Names) > 0 else ""
         try:
             while True:
                 docs = self.in_stream.pull()
+
                 for doc in docs:
                     raw = doc["_source"]["_raw"]
 

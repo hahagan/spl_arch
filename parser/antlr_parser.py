@@ -20,9 +20,10 @@ class AntlrParser(BaseParser):
         pass
 
     def parse(self):
+        # parse and construct cmd_opt
         search_cmd = SearchCommand("search", "streaming", "mytest")
-        replace_cmd = ReplaceCommand("replace", "streaming", "one", "oneClass", "class")
-        stats_cmd = StatsCommand("stats", "non_streaming", "avg", "math", "avg_math", "class")
+        replace_cmd = ReplaceCommand("replace", "streaming", "one", "oneClass", "grade")
+        stats_cmd = StatsCommand("stats", "non_streaming", "avg", "math", "avg_math", "grade")
 
         self.cmd_opts.append(search_cmd)
         self.cmd_opts.append(replace_cmd)
