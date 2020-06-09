@@ -5,6 +5,7 @@
     Author: Donny.fang
     Date: 2020/6/4 14:04
 """
+import json
 from threading import Lock
 from spl_arch.input.spl_input import SplInput
 from spl_arch.parser.antlr_parser import AntlrParser
@@ -56,6 +57,12 @@ class Executor(object):
         """
         executer entrance
 
+        此处采用lock对象共享的方式来控制每个命令的并行处理
+        main_thread首先会创建一个lock对象，每个命令对应的操作对象分别都设置持有lock，比如cmd_opt.set_lock(lock)
+        main_thread中，比如三个命令并行处理，分别对应着三个线程；按照规约，search会首先执行，等到其执行完毕，会做lock的release操作；
+        紧接着main_thread会aquire这个lock，然后往下执行，直到重新aquire，然后block住main_thread；此时意味着main_thread会等待着
+        其他的命令执行结束，release lock，这样main_thread又会被重新唤起，接着往下执行；如此反复，直到最后一个命令执行完毕即可。
+
         1. input
         2. parse
         3. scheduler --> search (extract)
@@ -64,7 +71,6 @@ class Executor(object):
         """
         # input module
         spl_cmd = SplInput().get_input()  # search repo="mytest"
-        # spl_cmd = '"search indexer="hello" | replace "h" with "d" in class | stats avg(math) as avg_math by class"'
 
         # parse module
         # input -> pipe_cmd
@@ -73,17 +79,8 @@ class Executor(object):
         antlr_parser.validate()
         opts = antlr_parser.parse()
 
-        '''
-            此处采用lock对象共享的方式来控制每个命令的并行处理
-            main_thread首先会创建一个lock对象，每个命令对应的操作对象分别都设置持有lock，比如cmd_opt.set_lock(lock)
-            main_thread中，比如三个命令并行处理，分别对应着三个线程；按照规约，search会首先执行，等到其执行完毕，会做lock的release操作；
-            紧接着main_thread会aquire这个lock，然后往下执行，直到重新aquire，然后block住main_thread；此时意味着main_thread会等待着
-            其他的命令执行结束，release lock，这样main_thread又会被重新唤起，接着往下执行；如此反复，直到最后一个命令执行完毕即可。
-        '''
-
         # encapsulate cmd_opt object and build input_output stream
         def stream_builder(cmd_opts, ex_lock, ex):
-            # 一种将命令与数据流串联算法
             input_stream = None
             end_stream = None
 
@@ -120,7 +117,7 @@ class Executor(object):
         scheduler = DemoScheduler("scheduler parallel", lock, exception)
         scheduler.schedule(opts)
 
-        print(result_stream.pull())
+        print(json.dumps(result_stream.pull(), indent=4, separators=(",", ":")))
 
 
 if __name__ == "__main__":

@@ -16,10 +16,10 @@ class DemoScheduler(Scheduler):
         self._command_exception = command_exception
 
     def schedule(self, cmd_ops):
-        self._commands = cmd_ops
-        threads = []
+        self._commands, threads = cmd_ops, []
+        self._commands[0].calculate()  # search first exec
 
-        for cmd in self._commands:
+        for cmd in self._commands[1:]:  # exec others in parallel
             threads.append(Thread(target=cmd.calculate))  # consider using threads
             threads[-1].start()
 
