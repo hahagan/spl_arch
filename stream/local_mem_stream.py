@@ -1,6 +1,6 @@
 from spl_arch.stream.base_stream import BaseStream
 import queue
-from spl_arch.stream.StreamException import StreamFinishException
+from spl_arch.stream.stream_exception import StreamFinishException
 
 
 class LocalMemoryQueue(BaseStream):
