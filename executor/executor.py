@@ -10,6 +10,11 @@ from spl_arch.parser.antlr_parser import AntlrParser
 from spl_arch.scheduler.scheduler import Scheduler
 from spl_arch.stream.es_stream import EsStream
 from spl_arch.stream.local_mem_stream import LocalMemoryQueue
+from spl_arch.stream.mysql.mysql_stream import MysqlStream
+from spl_arch.scheduler.demo_scheduler import DemoScheduler
+from spl_arch.scheduler.command_exception import CommandException
+import json
+from threading import Lock
 
 
 class Executor(object):
@@ -49,7 +54,6 @@ class Executor(object):
         scheduler = Scheduler("scheduler")
         scheduler.schedule(opts)
 
-
     @staticmethod
     def parallel_execute():
         """
@@ -72,17 +76,12 @@ class Executor(object):
         antlr_parser.validate()
         opts = antlr_parser.parse()
 
-        # CommandException and it’s lock, CommandException can get command error info
-        from spl_arch.scheduler.CommandException import CommandException
-        from threading import Lock
-        lock = Lock()
-        exception = CommandException(lock)
-
-        # combine Stream between cmd
-        def stream_builder(cmd_opts, ex_lock, ex):
-            # 一种将命令与数据流串联算法
+        # encapsulate cmd_opt object and build input_output stream
+        def stream_builder(cmd_opts, ex_lock, ex, stream_class):
             input_stream = None
             end_stream = None
+            count = 0
+
             for _index, cmd_opt in enumerate(cmd_opts):
                 if _index == 0:
                     # init cmd ---> searchcmd
@@ -90,13 +89,15 @@ class Executor(object):
                     cmd_opt.is_extract(True)
 
                 if input_stream is None:
-                    input_stream = LocalMemoryQueue('localQueue', 100)
+                    count += 1
+                    input_stream = stream_class("stream" + str(count), 100)
 
                 cmd_opt.set_input_stream(input_stream)
 
                 output_stream = cmd_opt.out_stream
                 if output_stream is None:
-                    output_stream = LocalMemoryQueue('localQueue', 100)
+                    count += 1
+                    output_stream = input_stream = stream_class("stream" + str(count), 100)
                     cmd_opt.set_output_stream(output_stream)
 
                 input_stream = output_stream
@@ -107,13 +108,19 @@ class Executor(object):
 
             return end_stream
 
-        result_stream = stream_builder(opts, lock, exception)
+        lock = Lock()
+        exception = CommandException(lock)
+        result_stream = stream_builder(opts, lock, exception, LocalMemoryQueue)
+        # result_stream = stream_builder(opts, lock, exception, MysqlStream)
 
         # schedule module
-        from spl_arch.scheduler.demoScheduler import DemoScheduler
         scheduler = DemoScheduler("scheduler parallel", lock, exception)
         scheduler.schedule(opts)
-        print(result_stream.pull())
+
+        if scheduler.status == scheduler.FINISH:
+            print(json.dumps(result_stream.pull(), indent=4, separators=(",", ":")))
+        else:
+            print("Executor error!!!")
 
 
 if __name__ == "__main__":
