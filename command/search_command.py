@@ -41,7 +41,7 @@ class SearchCommand(BaseCommand):
         self.set_output_stream(docs)
 
     def calculate(self):
-        from spl_arch.stream.StreamException import StreamFinishException
+        from spl_arch.stream.stream_exception import StreamFinishException
         try:
             while True:
                 docs = self.stream_in()

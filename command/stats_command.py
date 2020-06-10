@@ -47,7 +47,7 @@ class StatsCommand(BaseCommand):
         self.set_output_stream(self.output)
 
     def calculate(self):
-        from spl_arch.stream.StreamException import StreamFinishException
+        from spl_arch.stream.stream_exception import StreamFinishException
         d = dict()
         try:
             while True:
