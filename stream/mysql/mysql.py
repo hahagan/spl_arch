@@ -16,6 +16,7 @@ class Mysql(object):
     demo版本每个Mysql对象代表一个数据库连接
     可用与生产的版本，应考虑通过单例模式创建sql任务管理器，sql任务管理器管理若干数据库连接，sql操作由sql任务管理器以任务的方式进行调度管理
     """
+
     # _Instance = None  # 单例
     # _Lock = Lock()  # 单例创建使用锁，保证并发创建时无异常
     # _Conn = None  # 数据库连接
@@ -57,7 +58,6 @@ class Mysql(object):
         config = {
             "host": '127.0.0.1',
             'port': 3306,
-            'password': "eisoo.com123",
             'user': "root"
         }
         conn = pymysql.connect(**config)
@@ -86,6 +86,7 @@ class MySqlCursor(object):
     """
     包装  pymysql.cursor对象操作，添加额外的安全处理，避免使用者在使用结束后没进行释放操作等行为
     """
+
     def __init__(self, cursor):
         self._cursor = cursor
 
@@ -103,7 +104,6 @@ class MySqlCursor(object):
 
     def __del__(self):
         try:
-            print("closing cursor")
             self._cursor.close()
         except Exception as e:
             logging.exception(e)
