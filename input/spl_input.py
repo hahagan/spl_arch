@@ -15,6 +15,5 @@ class SplInput(object):
     def __init__(self):
         pass
 
-    @staticmethod
-    def get_input():
+    def get_input(self):
         return input("Spl cmd: ")

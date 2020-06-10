@@ -6,6 +6,7 @@
     Date: 2020/6/4 19:23
 """
 import json
+from threading import Thread
 from spl_arch.stream.es_stream import EsStream
 
 

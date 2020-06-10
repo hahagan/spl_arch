@@ -1,6 +1,6 @@
 from spl_arch.stream.base_stream import BaseStream
 import queue
-from spl_arch.stream.stream_exception import StreamFinishException
+from spl_arch.stream.StreamException import StreamFinishException
 
 
 class LocalMemoryQueue(BaseStream):
@@ -13,10 +13,9 @@ class LocalMemoryQueue(BaseStream):
         event = self._queue.get()
         if isinstance(event, StreamFinishException):
             raise event
-
         return event
 
-    def push(self, event=None):
+    def push(self, event):
         if self.finish_in:
             raise StreamFinishException
         self._queue.put(event)
