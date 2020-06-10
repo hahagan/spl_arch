@@ -71,8 +71,8 @@ class Executor(object):
         :return: void
         """
         # input module
-        # spl_cmd = SplInput().get_input()  # search repo="mytest"
-        spl_cmd = '"search indexer="hello" | replace "hello" with "world" in class | stats avg(math) as avg_math by class"'
+        spl_cmd = SplInput().get_input()  # search repo="mytest"
+        # spl_cmd = '"search indexer="hello" | replace "hello" with "world" in class | stats avg(math) as avg_math by class"'
 
         # parse module
         # input -> pipe_cmd
@@ -116,8 +116,8 @@ class Executor(object):
 
         lock = Lock()
         exception = CommandException(lock)
-        # result_stream = stream_builder(opts, lock, exception, LocalMemoryQueue)
-        result_stream = stream_builder(opts, lock, exception, MysqlStream)
+        result_stream = stream_builder(opts, lock, exception, LocalMemoryQueue)
+        # result_stream = stream_builder(opts, lock, exception, MysqlStream)
 
         # schedule module
         from spl_arch.scheduler.demo_scheduler import DemoScheduler
