@@ -1,10 +1,11 @@
 from collections import namedtuple
-from .enums import CMD, CMP_OP, SEARCH_KIND, LOGICAL_OP
 if __name__ is not None and "." in __name__:
+    from .enums import CMD, CMP_OP, SEARCH_KIND, LOGICAL_OP
     from .SPLListener import SPLListener
     from .SPLParser import SPLParser
     from .SPLLexer import SPLLexer
 else:
+    from enums import CMD, CMP_OP, SEARCH_KIND, LOGICAL_OP
     from SPLParser import SPLParser
     from SPLLexer import SPLLexer
     from SPLListener import SPLListener
@@ -279,24 +280,3 @@ class Pipeliner(SPLListener):
         if (field_list := ctx.fieldList()):
             stats.by_fields = field_list.ret
         ctx.ret = stats
-
-
-if __name__ == '__main__':
-    import sys
-    from antlr4 import CommonTokenStream, ParseTreeWalker, FileStream, InputStream
-    if len(sys.argv) > 1:
-        input_stream = FileStream(sys.argv[1], encoding='utf8')
-    else:
-        # cmd = "search test | replace a with b | stats max(f1) as 最大值 by f2"
-        input_stream = InputStream(sys.stdin.read())
-
-    lexer = SPLLexer(input_stream)
-    token_stream = CommonTokenStream(lexer)
-    parser = SPLParser(token_stream)
-    tree = parser.pipeline()
-
-    walker = ParseTreeWalker()
-    pipeliner = Pipeliner()
-    walker.walk(pipeliner, tree)
-    for c in pipeliner.cmds:
-        print(c)
