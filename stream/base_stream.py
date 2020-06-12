@@ -24,3 +24,10 @@ class BaseStream(object):
         :return:
         """
         raise NotImplementedError("{} {} not implemented".format(self.__class__.__name__, "push"))
+
+    def clean(self):
+        """
+        clean stream's resources
+        :return:
+        """
+        pass

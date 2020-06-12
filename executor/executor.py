@@ -90,6 +90,9 @@ class Executor(object):
             end_stream = None
             count = 0
 
+            # store all stream
+            streams = list()
+
             for _index, cmd_opt in enumerate(cmd_opts):
                 if _index == 0:
                     # init cmd ---> searchcmd
@@ -99,6 +102,7 @@ class Executor(object):
                 if input_stream is None:
                     count += 1
                     input_stream = stream_class("stream" + str(count), 100)
+                    streams.append(input_stream)
 
                 cmd_opt.set_input_stream(input_stream)
 
@@ -107,6 +111,7 @@ class Executor(object):
                     count += 1
                     output_stream = input_stream = stream_class("stream" + str(count), 100)
                     cmd_opt.set_output_stream(output_stream)
+                    streams.append(output_stream)
 
                 input_stream = output_stream
                 end_stream = input_stream
@@ -114,11 +119,11 @@ class Executor(object):
                 cmd_opt.set_lock(ex_lock)
                 cmd_opt.set_exception(ex)
 
-            return end_stream
+            return end_stream, streams
 
         lock = Lock()
         exception = CommandException(lock)
-        result_stream = stream_builder(opts, lock, exception, LocalMemoryQueue)
+        result_stream, all_stream= stream_builder(opts, lock, exception, LocalMemoryQueue)
         # result_stream = stream_builder(opts, lock, exception, MysqlStream)
 
         # schedule module
@@ -130,6 +135,9 @@ class Executor(object):
             print(json.dumps(result_stream.pull(), indent=4, separators=(",", ":")))
         else:
             print("Executor error!!!")
+
+        for s in all_stream:
+            s.clean()
 
 
 if __name__ == "__main__":

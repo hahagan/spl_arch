@@ -150,9 +150,12 @@ class MysqlStream(BaseStream):
             elif event_type == 'str':
                 return event
 
-    def __del__(self):
+    # def __del__(self):
+    #     self._delete_table()
+    #     pass
+
+    def clean(self):
         self._delete_table()
-        pass
 
 
 if __name__ == '__main__':
