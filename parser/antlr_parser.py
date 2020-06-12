@@ -1,32 +1,41 @@
-# -*- coding: utf-8 -*-
-"""
-    File Name: parser
-    Description: ""
-    Author: Donny.fang
-    Date: 2020/6/4 17:49
-"""
-from spl_arch.parser.base_parser import BaseParser
-from spl_arch.command.search_command import SearchCommand
-from spl_arch.command.replace_command import ReplaceCommand
-from spl_arch.command.stats_command import StatsCommand
+from antlr4 import CommonTokenStream, ParseTreeWalker, InputStream
 
 
-class AntlrParser(BaseParser):
-    def __init__(self, name, cmd):
-        super(AntlrParser, self).__init__(name, cmd)
-        self.cmd_opts = []
+if __name__ is not None and "." in __name__:
+    from .SPLParser import SPLParser
+    from .SPLLexer import SPLLexer
+    from .pipeliner import Pipeliner
+else:
+    from SPLParser import SPLParser
+    from SPLLexer import SPLLexer
+    from pipeliner import Pipeliner
+
+
+class AntlrParser:
+    """
+    >>> parser = AntlrParser()
+    >>> for c in parser.parse("search test | stats max(f1) as 最大值 by f2"):
+    ...     print(c)
+    <Search>
+        FullTextSearch(is_leaf=True, kind=<SEARCH_KIND.FULLTEXT: 1>, text='test')
+    <Stats>
+        agg_terms:
+            StatsAggTerm(func='max', func_field='f1', as_field='最大值')
+        by_fields: ['f2']
+    """
+
+    def __init__(self):
+        self._pipliner = Pipeliner()
+        self._walker = ParseTreeWalker()
 
     def validate(self):
-        pass
+        raise NotImplementedError
 
-    def parse(self):
-        # parse and construct cmd_opt
-        search_cmd = SearchCommand("search", "streaming", "mytest")
-        replace_cmd = ReplaceCommand("replace", "streaming", "one", "oneClass", "grade")
-        stats_cmd = StatsCommand("stats", "non_streaming", "avg", "math", "avg_math", "grade")
-
-        self.cmd_opts.append(search_cmd)
-        self.cmd_opts.append(replace_cmd)
-        self.cmd_opts.append(stats_cmd)
-
-        return self.cmd_opts
+    def parse(self, cmd):
+        lexer = SPLLexer(InputStream(cmd))
+        token_stream = CommonTokenStream(lexer)
+        parser = SPLParser(token_stream)
+        tree = parser.pipeline()
+        self._pipliner.clear()
+        self._walker.walk(self._pipliner, tree)
+        return self._pipliner.cmds
